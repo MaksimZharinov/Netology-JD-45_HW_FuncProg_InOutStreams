@@ -1,7 +1,9 @@
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 public class Main {
 
@@ -42,7 +44,7 @@ public class Main {
         File fileMain = new File("C:/Users/minim/STUDY/JD-45/Games/src/main/", "Main.java");
         try {
             if (fileMain.createNewFile()) {
-                logger.append(date +" создан файл C:/Users/minim/STUDY/JD-45/Games/src/main/Main.java\n");
+                logger.append(date + " создан файл C:/Users/minim/STUDY/JD-45/Games/src/main/Main.java\n");
             }
         } catch (IOException e) {
             System.out.println(e.getMessage());
@@ -81,12 +83,62 @@ public class Main {
             System.out.println(e.getMessage());
         }
 
-        String log = logger.toString();
-
         try (FileWriter writer = new FileWriter("C:/Users/minim/STUDY/JD-45/Games/temp/temp.txt", true)) {
-            writer.write(log);
+            writer.write(logger.toString());
         } catch (IOException e) {
             System.out.println(e.getMessage());
         }
+
+        GameProgress game1 = new GameProgress(100, 100, 1, 0.00);
+        GameProgress game2 = new GameProgress(75, 50, 50, 666.00);
+        GameProgress game3 = new GameProgress(15, 5, 80, 1234.56);
+
+        saveGame("C:/Users/minim/STUDY/JD-45/Games/savegames/save1.dat", game1);
+        saveGame("C:/Users/minim/STUDY/JD-45/Games/savegames/save2.dat", game2);
+        saveGame("C:/Users/minim/STUDY/JD-45/Games/savegames/save3.dat", game3);
+
+        List<String> filesToZip = new ArrayList<>();
+        filesToZip.add("C:/Users/minim/STUDY/JD-45/Games/savegames/save1.dat");
+        filesToZip.add("C:/Users/minim/STUDY/JD-45/Games/savegames/save2.dat");
+        filesToZip.add("C:/Users/minim/STUDY/JD-45/Games/savegames/save3.dat");
+
+        zipFiles("C:/Users/minim/STUDY/JD-45/Games/savegames/zip_savegames.zip", filesToZip);
+
+    }
+
+    public static boolean saveGame(String saveFilePath, GameProgress game) {
+        try (FileOutputStream outSave = new FileOutputStream(saveFilePath);
+             ObjectOutputStream objOutSave = new ObjectOutputStream(outSave)) {
+            objOutSave.writeObject(game);
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+            return false;
+        }
+        return true;
+    }
+
+    public static boolean zipFiles(String zipPath, List<String> toZip) {
+        try (ZipOutputStream zipOutStream = new ZipOutputStream(new FileOutputStream(zipPath))) {
+            for (String file : toZip) {
+                try (FileInputStream zipThisFile = new FileInputStream(file)) {
+                    String[] names = file.split("/");
+                    ZipEntry entry = new ZipEntry(names[names.length - 1]);
+                    zipOutStream.putNextEntry(entry);
+                    byte[] buffer = new byte[zipThisFile.available()];
+                    zipThisFile.read(buffer);
+                    zipOutStream.write(buffer);
+                    zipOutStream.closeEntry();
+                } catch (Exception e) {
+                    System.out.println(e.getMessage());
+                    return false;
+                }
+                File deleleThisFile = new File(file);
+                deleleThisFile.delete();
+            }
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+            return false;
+        }
+        return true;
     }
 }
