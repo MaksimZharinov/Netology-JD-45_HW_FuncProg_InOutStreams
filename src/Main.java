@@ -3,6 +3,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
 public class Main {
@@ -104,6 +105,10 @@ public class Main {
 
         zipFiles("C:/Users/minim/STUDY/JD-45/Games/savegames/zip_savegames.zip", filesToZip);
 
+        openZip("C:/Users/minim/STUDY/JD-45/Games/savegames" +
+                "/zip_savegames.zip", "C:/Users/minim/STUDY/JD-45/Games/savegames/");
+
+        System.out.println(openProgress("C:/Users/minim/STUDY/JD-45/Games/savegames/save3.dat"));
     }
 
     public static boolean saveGame(String saveFilePath, GameProgress game) {
@@ -140,5 +145,38 @@ public class Main {
             return false;
         }
         return true;
+    }
+
+    public static boolean openZip(String zipFilePath, String dirToOpenZip) {
+        try (ZipInputStream unZipStream = new ZipInputStream(new FileInputStream(zipFilePath))) {
+            ZipEntry entry;
+            String name;
+            while ((entry = unZipStream.getNextEntry()) != null) {
+                name = entry.getName();
+                try (FileOutputStream unZipFileStream = new FileOutputStream(dirToOpenZip + name)) {
+                    for (int c = unZipStream.read(); c != -1; c = unZipStream.read()) {
+                        unZipFileStream.write(c);
+                    }
+                } catch (Exception e) {
+                    System.out.println(e.getMessage());
+                    return false;
+                }
+            }
+            unZipStream.closeEntry();
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+            return false;
+        }
+        return true;
+    }
+
+    public static GameProgress openProgress(String openFilePath) {
+        try (FileInputStream showThisFile = new FileInputStream(openFilePath);
+             ObjectInputStream showFileObj = new ObjectInputStream(showThisFile)) {
+            return (GameProgress) showFileObj.readObject();
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+        return null;
     }
 }
